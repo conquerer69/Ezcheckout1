@@ -1,75 +1,56 @@
 import RPi.GPIO as GPIO
 from hx711 import HX711
-import time
 
 try:
-    # Set up GPIO pins
     GPIO.setmode(GPIO.BCM)
-    hx = HX711(dout_pin=20, pd_sck_pin=21)  # Define the pins for HX711
+    hx = HX711(dout_pin=20, pd_sck_pin=21)
 
     # Tare the scale (zero the scale)
-    print("Taring the scale... Make sure it's empty.")
-    err = hx.zero()
-    if err:
-        raise ValueError('Tare was unsuccessful.')
+    if hx.zero():
+        raise ValueError('Tare is unsuccessful.')
 
     # Get raw data to confirm initialization
     reading = hx.get_raw_data_mean()
     if reading:
         print('Data subtracted by offset but still not converted to units:', reading)
     else:
-        print('Invalid data:', reading)
+        print('Invalid data', reading)
 
     # Prompt user for a known weight for calibration
-    input('Place a known weight on the scale (up to 10 kg) and press Enter...')
+    input('Put known weight on the scale (up to 10 kg) and then press Enter')
     reading = hx.get_data_mean()
     if reading:
         print('Mean value from HX711 subtracted by offset:', reading)
 
-        # Error handling for known weight input
         while True:
-            known_weight_grams = input('Enter the known weight in grams (e.g., 1000 for 1 kg): ')
+            known_weight_grams = input('Write how many grams it was (e.g., 1000 for 1 kg) and press Enter: ')
             try:
                 value = float(known_weight_grams)
-                if value <= 0 or value > 10000:  # Limit the weight to a reasonable range (0 < value ≤ 10,000 grams)
-                    print('Please enter a positive number less than or equal to 10,000.')
-                else:
-                    print(f'Entered known weight: {value} grams')
-                    break
+                print(value, 'grams')
+                break  # Exit loop on valid input
             except ValueError:
-                print('Invalid input. Expected an integer or float.')
+                print('Expected integer or float. Please try again.')
 
-        # Calculate the scale ratio based on known weight
-        ratio = abs(reading / value)  # Using absolute value for the ratio to handle negative readings
-        hx.set_scale_ratio(ratio)  # Set the calculated ratio
-        print(f'Calibration successful. Your calculated ratio is: {ratio}')
+        # Set the calculated scale ratio
+        ratio = abs(reading / value)
+        hx.set_scale_ratio(ratio)
+        print('Your ratio is', ratio)
     else:
         raise ValueError('Cannot calculate mean value. Try debug mode. Variable reading:', reading)
 
-    # Continuous weight display loop
-    print('Starting continuous weight reading. Press Ctrl+C to exit.')
-    while True:
-        try:
-            # Get a new reading to display the current weight
-            weight = hx.get_weight_mean(10)  # Read 10 samples and get the average
-            if weight:
-                print(f'Current weight on the scale: {weight:.2f} grams')
-            else:
-                print('Invalid data when reading current weight.')
-            
-            # Wait for a short interval before reading again
-            time.sleep(1)
-
-        except (KeyboardInterrupt, SystemExit):
-            print('Exiting continuous reading loop.')
-            break
+    # Final reading display
+    input('Press Enter to show reading')
+    reading = hx.get_data_mean()
+    if reading:
+        print('Current weight on the scale in grams is:', reading)
+    else:
+        print('Invalid data when reading current weight.')
 
 except (KeyboardInterrupt, SystemExit):
-    print('Program interrupted by the user.')
+    print('Bye :)')
 
-except ValueError as ve:
-    print(f'Error: {ve}')
+except Exception as e:
+    print('An unexpected error occurred:', e)
 
 finally:
-    GPIO.cleanup()  # Clean up GPIO to avoid warnings on subsequent runs
-    print('GPIO cleaned up and program terminated.')
+    GPIO.cleanup()
