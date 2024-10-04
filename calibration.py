@@ -45,29 +45,15 @@ try:
         hx.set_scale_ratio(ratio)  # Set the calculated ratio
         print(f'Calibration successful. Your calculated ratio is: {ratio}')
 
-        # Continuous weight display loop
-        print('Starting continuous weight reading. Press Ctrl+C to exit.')
-        while True:
-            try:
-                # Get a new reading to display the current weight
-                weight = hx.get_weight_mean(10)  # Read 10 samples and get the average
-                if weight:
-                    print(f'Current weight on the scale: {weight:.2f} grams')
-                    
-                    # Update the fixed reading if the current weight is closer to the known weight
-                    if abs(weight - value) < abs(fixed_reading - value):
-                        fixed_reading = weight
-                        print(f'Updated fixed reading value: {fixed_reading:.2f} grams')
+        # Get a single weight reading
+        weight = hx.get_weight_mean(10)  # Read 10 samples and get the average
+        if weight:
+            print(f'Current weight on the scale: {weight:.2f} grams')
+        else:
+            print('Invalid data when reading current weight.')
 
-                else:
-                    print('Invalid data when reading current weight.')
-
-                # Wait for a short interval before reading again
-                time.sleep(1)
-
-            except (KeyboardInterrupt, SystemExit):
-                print('Exiting continuous reading loop.')
-                break
+    else:
+        print('Invalid data:', reading)
 
 except (KeyboardInterrupt, SystemExit):
     print('Program interrupted by the user.')
