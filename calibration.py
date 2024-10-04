@@ -21,7 +21,8 @@ try:
     reading = hx.get_data_mean()
     if reading:
         print('Mean value from HX711 subtracted by offset:', reading)
-
+        
+        # Get the known weight from user input
         while True:
             known_weight_grams = input('Write how many grams it was (e.g., 1000 for 1 kg) and press Enter: ')
             try:
@@ -31,8 +32,12 @@ try:
             except ValueError:
                 print('Expected integer or float. Please try again.')
 
-        # Set the calculated scale ratio
-        ratio = abs(reading / value)
+        # Set a fixed reading value close to the known weight
+        fixed_reading = reading  # You can adjust this to a specific value if needed
+        print('Using fixed reading for calibration:', fixed_reading)
+
+        # Calculate the scale ratio using the fixed reading
+        ratio = abs(fixed_reading / value)
         hx.set_scale_ratio(ratio)
         print('Your ratio is', ratio)
     else:
